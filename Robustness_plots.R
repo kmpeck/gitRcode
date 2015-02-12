@@ -171,25 +171,20 @@ robustness.scatterplot <- function(treatment_dir, wd=setwd(), lines=TRUE, legend
   dev.off()
 }
 
-
-#-----------
-# Figure 3
-#-----------
-
-setwd(main_dir)
-
 #function to plot error bars
 error.bars <- function(x, y, err, barwidth, col){ 
   segments(x,y-err,x,y+err, col=col); segments(x-barwidth,y+err,x+barwidth,y+err, col=col); segments(x-barwidth,y-err,x+barwidth,y-err, col=col)
 }
 
-starting.plot <- function(x, ylab, y.adj=0.05, log=FALSE){
-  xlim = c(0,500)
+starting.plot <- function(y, ylab, gens, y.adj=0, log=FALSE){
   if(log){
-    xlim=c(0, log10(500))
+    xlim=c(0, log10(gens))
   }
-  plot(NA,xlab="Generation",ylab=ylab, ylim=c(min(x)-y.adj, 
-                                              max(x)+y.adj), xlim=xlim, xaxt="n")
+  else{
+    xlim=c(0,gens)
+  }
+  plot(NA,xlab="Generation",ylab=ylab, ylim=c(min(y)-y.adj, 
+                                              max(y)+y.adj), xlim=xlim, xaxt="n")
   if(log){
     axis(1, at=c(log10(1), log10(10), log10(100), log10(200), log10(500)), labels=c(1,10,100,200,500))
   }
@@ -247,76 +242,42 @@ plot.points.anc <- function(param, param2, eb=TRUE, legend="bottomright", log=FA
   legend(legend,treatments,col=colors,pch=16, bty='n')
 }
 
-plot.lines <- function(param, eb){
-  colors <- c(1,"dodgerblue")
+proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE){
   setwd(treatment_dir[2]) 
-  mydat = read.table("data_summary.txt", header=T)
-  for (i in 1:length(param)){
-    for (gen in unique(mydat$Generation)) {
-      dataset <- subset(mydat,Generation == gen)
-      lines(gen,mean(dataset[[param[i]]]),pch=16,col=colors[i])
-      if(eb){
-        error.bars(gen, mean(dataset[[param[i]]]), 1.96*sd(dataset[[param[i]]])/sqrt(length(dataset[[param[i]]])), 2, colors[i])}
-    }
-  }
-  legend("bottomright",param,col=colors,pch=16, bty='n')
+  temp.dat <- read.table("data_summary.txt", header=T)
+  temp.dat$mean_weight_offdiagonal <- temp.dat$mean_weight_all - temp.dat$mean_weight_diagonal
+  gens <- max(temp.dat$Generation)
+
+  setwd(wd)
+  pdf("Proximate_mechanisms_log.pdf", width=10, height=6)
+  par(mfrow=c(2,3))
+
+  #Fitness
+  starting.plot(c(0.3,1), "Mean Fitness", gens, log=log)
+  plot.points("Mean_Fitness", log=log)
+
+  #Genetic Robustness
+  starting.plot(c(0.3,1), "Median Genetic Robustness", gens, log=log)
+  plot.points.anc("Median_Robustness", "genetic_robustness_ancestral", legend="bottomright", log=log)
+
+  #Environmental Robustness
+  starting.plot(c(0.3,1), "Median Environmental Robustness", gens, log=log)
+  plot.points("Median_Env_Robustness", log=log)
+
+  #Path length
+  starting.plot(c(0,55), "Path Length", gens, log=log)
+  plot.points.anc("path_length","path_length_ancestral", legend="topright", log=log)
+
+  #Strength of autoregulation
+  starting.plot(temp.dat$mean_weight_diagonal_nonzero, "Strength of Autoregulation", gens, y.adj=0.2, log=log)
+  plot.points("mean_weight_diagonal_nonzero", legend="topright",log=log)
+
+  #Mean weight of the off-diagonals
+  starting.plot(temp.dat$mean_weight_offdiagonal, "Mean Weight of Off-Diagonal Interactions", gens, y.adj=0.2, log=log)
+  plot.points("mean_weight_offdiagonal", legend="topright", log=log)
+
+  dev.off()
 }
-
-setwd(treatment_dir[2]) 
-temp.dat <- read.table("data_summary.txt", header=T)
-temp.dat$mean_weight_offdiagonal <- temp.dat$mean_weight_all - temp.dat$mean_weight_diagonal
-
-setwd(main_dir)
-pdf("Proximate_mechanisms_log.pdf", width=10, height=6)
-par(mfrow=c(2,3))
-
-#Fitness
-starting.plot(c(0.35,.95), "Mean Fitness", log=TRUE)
-plot.points("Mean_Fitness", log=TRUE)
-
-#Genetic Robustness
-starting.plot(c(0.35,.95), "Median Genetic Robustness",log=TRUE)
-plot.points.anc("Median_Robustness", "genetic_robustness_ancestral", legend="bottomright", log=TRUE)
-
-#Environmental Robustness
-starting.plot(c(0.35,.95), "Median Environmental Robustness", log=TRUE)
-plot.points("Median_Env_Robustness", log=TRUE)
-
-#Path length
-starting.plot(c(0,55), "Path Length", log=TRUE)
-plot.points.anc("path_length","path_length_ancestral", legend="topright", log=TRUE)
-
-#Matrix asymmetry
-#starting.plot(temp.dat$matrix_asymmetry, "Matrix Asymmetry", .005)
-#plot.points("matrix_asymmetry")
-
-#Nonzero diagonal
-#starting.plot(temp.dat$nonzero_diagonal, "Nonzero Diagonal")
-#plot.points("nonzero_diagonal")
-
-#Mean weight of the diagonals
-#starting.plot(c(.2,.8), "Mean Weight of the Diagonal", .005, log=TRUE)
-#plot.points("mean_weight_diagonal", legend="topright",log=TRUE)
-
-starting.plot(c(.2,.5), "Strength of Autoregulation", .005, log=TRUE)
-plot.points("mean_weight_diagonal_nonzero", legend="topright",log=TRUE)
-
-#starting.plot(c(.2,.8), "Proportion positive on diagonal", .005, log=TRUE)
-#plot.points("prop_positive_on_diagonal", legend="topright",log=TRUE)
-
-#Mean weight of the off-diagonals
-starting.plot(c(-.3,0), "Mean Weight of Off-Diagonal Interactions", .005, log=TRUE)
-plot.points("mean_weight_offdiagonal", legend="topright", log=TRUE)
-
-#Mean weight all
-#starting.plot(temp.dat$mean_weight_all, "Matrix Weight All")
-#plot.points("mean_weight_all")
-
-#Standard deviation all
-#starting.plot(temp.dat$standard_deviation_all, "Standard Deviation", 0.005)
-#plot.points("standard_deviation_all")
-
-dev.off()
 
 #t-test on mean weight diagonal endpoints
 setwd(treatment_dir[1]) 
