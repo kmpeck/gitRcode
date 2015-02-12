@@ -136,39 +136,40 @@ wilcox.test.write <- function(pop1, pop2, comparison, filename, ncol){
   write(c("Wilcox sign-rank test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
 }
 
-#Scatterplot
-pdf("Robustness_scatterplot.pdf", width=8, height=7)
-par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
+robustness.scatterplot <- function(treatment_dir, wd=setwd(), lines=TRUE, legend="topleft")
+  pdf("Robustness_scatterplot.pdf", width=8, height=7)
+  par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
 
-setwd(treatment_dir[1])
-mydat <- read.table("data_summary.txt", header=T)
-start <- subset(mydat, mydat$Generation == 0)
-end <- subset(mydat, mydat$Generation == max(mydat$Generation))
-setwd(treatment_dir[2])
-mydat2 <- read.table("data_summary.txt", header=T)
-end_pert <- subset(mydat2, mydat2$Generation == max(mydat2$Generation))
+  setwd(treatment_dir[1])
+  mydat <- read.table("data_summary.txt", header=T)
+  start <- subset(mydat, mydat$Generation == 0)
+  end <- subset(mydat, mydat$Generation == max(mydat$Generation))
+  setwd(treatment_dir[2])
+  mydat2 <- read.table("data_summary.txt", header=T)
+  end_pert <- subset(mydat2, mydat2$Generation == max(mydat2$Generation))
 
-setwd(main_dir)
-plot(start$Median_Robustness~start$Median_Env_Robustness, pch=1,
-     xlab="Environmental Robustness", ylab="Genetic Robustness", 
-     ylim=c(0,1))
-for(i in 1:100){
-  segments(start$Median_Env_Robustness[i],start$Median_Robustness[i],end$Median_Env_Robustness[i],end$Median_Robustness[i], col=2)
-  segments(start$Median_Env_Robustness[i],start$Median_Robustness[i],end_pert$Median_Env_Robustness[i],end_pert$Median_Robustness[i], col=4)
-}
-points(start$Median_Robustness~start$Median_Env_Robustness, pch=16, col="white")
-points(end$Median_Robustness~end$Median_Env_Robustness, pch=16, col="white")
-points(end_pert$Median_Robustness~end_pert$Median_Env_Robustness, pch=16, col="white")
-points(start$Median_Robustness~start$Median_Env_Robustness, pch=1, col=1)
-points(end$Median_Robustness~end$Median_Env_Robustness, pch=1, col=2)
-points(end_pert$Median_Robustness~end_pert$Median_Env_Robustness, pch=1,col=4)
+  setwd(wd)
+  plot(start$Median_Robustness~start$Median_Env_Robustness, pch=1,
+      xlab="Environmental Robustness", ylab="Genetic Robustness", 
+      ylim=c(0,1))
+  if(lines){
+      segments(start$Median_Env_Robustness,start$Median_Robustness,end$Median_Env_Robustness,end$Median_Robustness, col=2)
+      segments(start$Median_Env_Robustness,start$Median_Robustness,end_pert$Median_Env_Robustness,end_pert$Median_Robustness, col=4)
+    }
+  points(start$Median_Robustness~start$Median_Env_Robustness, pch=16, col="white")
+  points(end$Median_Robustness~end$Median_Env_Robustness, pch=16, col="white")
+  points(end_pert$Median_Robustness~end_pert$Median_Env_Robustness, pch=16, col="white")
+  points(start$Median_Robustness~start$Median_Env_Robustness, pch=1, col=1)
+  points(end$Median_Robustness~end$Median_Env_Robustness, pch=1, col=2)
+  points(end_pert$Median_Robustness~end_pert$Median_Env_Robustness, pch=1,col=4)
 
-legend("topleft", c("Start", "End - control", "End - perturbed"),
+  legend(legend, c("Start", "End - control", "End - perturbed"),
        lty=c(NA,1,1), lwd=1.5, pt.cex=1,
        pch=21, col=c(1,2,4), pt.bg=c("white","white","white"),
        bty="n", cex=1)
 
-dev.off()
+  dev.off()
+}
 
 
 #-----------
@@ -439,6 +440,9 @@ contour.plot("10000_random_individuals.txt")
 setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
 main_dir = getwd()
 treatment_dir <- NULL; treatment_dir[1] <- paste(main_dir,"/control_pop",sep=""); treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
+
 data_summary(treatment_dir)
 robustness.boxplots(treament_dir, main_dir, stats=TRUE)
+robustness.scatterplot(treatment_dir, main_dir)
+  
 
