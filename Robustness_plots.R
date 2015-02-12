@@ -1,32 +1,26 @@
 #-----------
-# Figure 1: 
-# Contour plot of environmental vs. genetic robustness for random individuals
+# Set up functions for data summary and plotting
 #-----------
 
-setwd("~/GitHub/gene_network/data/Manuscript data/Figure 1")
 library("gplots")
-dat <- read.table("10000_random_individuals.txt", header=T)
-dat$g_rob <- round(dat$genetic_robustness,1)
-dat$e_rob <- round(dat$environmental_robustness,1)
+library("MASS")
 
-dat.tab2 <- as.matrix(table(dat$e_rob, dat$g_rob))
-colors = c("white","grey90","grey80","grey70","grey60","grey50","grey40","grey30","grey20","grey10","black","black")
-
-pdf("Contour_Plot.pdf", width=7, height=7)
-par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
-filled.contour(dat.tab2, col=colors, nlevels=9, xlab="environmental robustness",
+contour.plot <- function(filename, wd=getwd()){
+  dat <- read.table(filename, header=T)
+  dat$g_rob <- round(dat$genetic_robustness,1)
+  dat$e_rob <- round(dat$environmental_robustness,1)
+  dat.tab2 <- as.matrix(table(dat$e_rob, dat$g_rob))
+  colors = c("white","grey90","grey80","grey70","grey60","grey50","grey40","grey30","grey20","grey10","black","black")
+  setwd(wd)
+  pdf("Contour_Plot.pdf", width=7, height=7)
+  par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
+  filled.contour(dat.tab2, col=colors, nlevels=9, xlab="environmental robustness",
                ylab="genetic robustness")
-dev.off()
+  dev.off()
+  out1 <- cor.test(dat$environmental_robustness, dat$genetic_robustness, method="spearman")
+  out1
+}
 
-out1 <- cor.test(dat$environmental_robustness, dat$genetic_robustness, method="spearman")
-out1
-
-
-#-----------
-# Figure 2
-#-----------
-
-# Environmental and genetic robustness before and after evolution (in a control and perturbed environment)
 
 data_summary <- function(treatment_dir){
   for(i in 1:length(treatment_dir)){
@@ -99,46 +93,48 @@ data_summary <- function(treatment_dir){
 }
 }
 
-setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
-main_dir = getwd()
-treatment_dir <- NULL #asex and sex
-treatment_dir[1] <- paste(main_dir,"/control_pop",sep="")
-treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
+robustness.boxplots <- function(treatment_dir, wd=getwd(), stats=FALSE){
+  setwd(wd)
+  pdf("Robustness_Boxplots.pdf", width=10, height=7)
+  par(mfrow=c(1,2))
+  par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
 
-data_summary(treatment_dir)
+  #get data needed to set up empty plot
+  setwd(treatment_dir[1])
+  mydat <- read.table("data_summary.txt", header=T)
+  env_start <- subset(mydat$Median_Env_Robustness, mydat$Generation == 0)
+  env_end <- subset(mydat$Median_Env_Robustness, mydat$Generation == max(mydat$Generation))
+  gen_start <- subset(mydat$Median_Robustness, mydat$Generation == 0)
+  gen_end <- subset(mydat$Median_Robustness, mydat$Generation == max(mydat$Generation))
+  setwd(treatment_dir[2])
+  mydat2 <- read.table("data_summary.txt", header=T)
+  env_end_pert <- subset(mydat2$Median_Env_Robustness, mydat2$Generation == max(mydat2$Generation))
+  gen_end_pert <- subset(mydat2$genetic_robustness_ancestral, mydat2$Generation == max(mydat2$Generation))
+  setwd(main_dir)
 
-setwd(main_dir)
-pdf("Robustness_Boxplots.pdf", width=10, height=7)
-par(mfrow=c(1,2))
-par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
+  boxplot(env_start, env_end, env_end_pert, names=c("start", "end - control", "end"), main="Environmental Robustness", ylim=c(0,1), col="grey70")
+  boxplot(gen_start, gen_end, gen_end_pert, names=c("start", "end - control", "end"), main="Genetic Robustness", ylim=c(0,1), col="grey70")
+  dev.off()
 
-#get data needed to set up empty plot
-setwd(treatment_dir[1])
-mydat <- read.table("data_summary.txt", header=T)
-env_start <- subset(mydat$Median_Env_Robustness, mydat$Generation == 0)
-env_end <- subset(mydat$Median_Env_Robustness, mydat$Generation == max(mydat$Generation))
-gen_start <- subset(mydat$Median_Robustness, mydat$Generation == 0)
-gen_end <- subset(mydat$Median_Robustness, mydat$Generation == max(mydat$Generation))
-setwd(treatment_dir[2])
-mydat2 <- read.table("data_summary.txt", header=T)
-env_end_pert <- subset(mydat2$Median_Env_Robustness, mydat2$Generation == max(mydat2$Generation))
-gen_end_pert <- subset(mydat2$genetic_robustness_ancestral, mydat2$Generation == max(mydat2$Generation))
-setwd(main_dir)
+  if(stats){
+    #Wilcoxon sign-rank test
+    #Does not assume a normal distribution
+    setwd(wd)
+    filestats="Population_stats.txt"
+    fileHeader = c("Statistical_text", "Comparison", "stat_value", "p_value")
+    nCol = length(fileHeader)
+    write(fileHeader, filestats, ncolumns=nCol)
+    wilcox.test.write(env_start, env_end_pert, "Env. robustness start vs. end perturb", filestats, nCol)
+    wilcox.test.write(env_start, env_end, "Env. robustness start vs. end control", filestats, nCol)
+    wilcox.test.write(gen_start, gen_end_pert, "Gen. robustness start vs. end perturb", filestats, nCol)
+    wilcox.test.write(gen_start, gen_end, "Gen. robustness start vs. end control", filestats, nCol)
+    }
+}
 
-boxplot(env_start, env_end, env_end_pert, names=c("start", "end - control", "end"), main="Environmental Robustness", ylim=c(0,1), col="grey70")
-boxplot(gen_start, gen_end, gen_end_pert, names=c("start", "end - control", "end"), main="Genetic Robustness", ylim=c(0,1), col="grey70")
-dev.off()
-
-#Wilcoxon sign-rank test
-#Does not assume a normal distribution
-library(MASS)
-filestats="Population_stats.txt"
-write("Wilcoxon rank tests", filestats)
-wilcox.test(env_start, env_end_pert, paired=T) -> env_pert; write(c(env_pert$data.name, env_pert$statistic, signif(env_pert$p.value,3)), filestats, ncol=3, append=T)
-wilcox.test(gen_start, gen_end_pert, paired=T) -> gen_pert; write(c(gen_pert$data.name, gen_pert$statistic, signif(gen_pert$p.value,3)), filestats, ncol=3, append=T)
-wilcox.test(env_end, env_start, paired=T) -> env_cont; write(c(env_cont$data.name, env_cont$statistic, signif(env_cont$p.value,3)), filestats, ncol=3, append=T)
-wilcox.test(gen_end, gen_start, paired=T) -> gen_cont; write(c(gen_cont$data.name, gen_cont$statistic, signif(gen_cont$p.value,3)), filestats, ncol=3, append=T)
-
+wilcox.test.write <- function(pop1, pop2, comparison, filename, ncol){
+  wt <- wilcox.test(pop1,pop2, paired=T)
+  write(c("Wilcox sign-rank test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
+}
 
 #Scatterplot
 pdf("Robustness_scatterplot.pdf", width=8, height=7)
@@ -431,3 +427,18 @@ lines(sin(ye7)~z, col=3, lwd=2)
 #lines(sin(ye6)~z, col=6, lwd=2)
 legend("bottomright", c("Strength of autoregulation", "Off-diagonal interactions", "Path length"), lty=1, col=c(2,3,4), lwd=2, bty='n')
 dev.off()
+
+
+##PLOT FIGURES
+
+#Contour plot
+setwd("~/GitHub/gene_network/data/Manuscript data/Figure 1")
+contour.plot("10000_random_individuals.txt")
+
+#Robustness boxplots
+setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
+main_dir = getwd()
+treatment_dir <- NULL; treatment_dir[1] <- paste(main_dir,"/control_pop",sep=""); treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
+data_summary(treatment_dir)
+robustness.boxplots(treament_dir, main_dir, stats=TRUE)
+
