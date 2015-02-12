@@ -279,23 +279,26 @@ proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE){
   dev.off()
 }
 
-#t-test on mean weight diagonal endpoints
-setwd(treatment_dir[1]) 
-mydat = read.table("data_summary.txt", header=T)
-mydat$mean_weight_offdiagonal <- mydat$mean_weight_all - mydat$mean_weight_diagonal
-end.on <- mydat$mean_weight_diagonal[mydat$Generation==max(mydat$Generation)]
-end.nz.on <- mydat$mean_weight_diagonal_nonzero[mydat$Generation==max(mydat$Generation)]
-end.np.on <- mydat$prop_positive_on_diagonal[mydat$Generation==max(mydat$Generation)]
-end.off <- mydat$mean_weight_offdiagonal[mydat$Generation==max(mydat$Generation)]
-PL.cont <- mydat$path_length[mydat$Generation==unique(mydat$Generation)[6]]
-setwd(treatment_dir[2]) 
-mydat = read.table("data_summary.txt", header=T)
-mydat$mean_weight_offdiagonal <- mydat$mean_weight_all - mydat$mean_weight_diagonal
-end_pert.on <- mydat$mean_weight_diagonal[mydat$Generation==max(mydat$Generation)]
-end_pert.nz.on <- mydat$mean_weight_diagonal_nonzero[mydat$Generation==max(mydat$Generation)]
-end_pert.np.on <- mydat$prop_positive_on_diagonal[mydat$Generation==max(mydat$Generation)]
-end_pert.off <- mydat$mean_weight_offdiagonal[mydat$Generation==max(mydat$Generation)]
-PLA.pert <-  mydat$path_length_ancestral[mydat$Generation==unique(mydat$Generation)[6]]
+proximate.mechanism.stats <- function(treatment_dir, wd=getwd()){
+  #t-test on mean weight diagonal endpoints
+  setwd(treatment_dir[1]) 
+  mydat = read.table("data_summary.txt", header=T)
+  mydat$mean_weight_offdiagonal <- mydat$mean_weight_all - mydat$mean_weight_diagonal
+  
+  gen <- which(mydat)
+  end.on <- mydat$mean_weight_diagonal[mydat$Generation==max(mydat$Generation)]
+  end.nz.on <- mydat$mean_weight_diagonal_nonzero[mydat$Generation==max(mydat$Generation)]
+  end.np.on <- mydat$prop_positive_on_diagonal[mydat$Generation==max(mydat$Generation)]
+  end.off <- mydat$mean_weight_offdiagonal[mydat$Generation==max(mydat$Generation)]
+  PL.cont <- mydat$path_length[mydat$Generation==unique(mydat$Generation)[6]]
+  setwd(treatment_dir[2]) 
+  mydat = read.table("data_summary.txt", header=T)
+  mydat$mean_weight_offdiagonal <- mydat$mean_weight_all - mydat$mean_weight_diagonal
+  end_pert.on <- mydat$mean_weight_diagonal[mydat$Generation==max(mydat$Generation)]
+  end_pert.nz.on <- mydat$mean_weight_diagonal_nonzero[mydat$Generation==max(mydat$Generation)]
+  end_pert.np.on <- mydat$prop_positive_on_diagonal[mydat$Generation==max(mydat$Generation)]
+  end_pert.off <- mydat$mean_weight_offdiagonal[mydat$Generation==max(mydat$Generation)]
+  PLA.pert <-  mydat$path_length_ancestral[mydat$Generation==unique(mydat$Generation)[6]]
 
 setwd(main_dir)
 write("Weight on/off diagonal endpoint t-tests", filestats, append=T)
@@ -304,6 +307,23 @@ t.test(end.nz.on, end_pert.nz.on, paired=TRUE) -> on_diag_nz; write(c("mean weig
 t.test(end.np.on, end_pert.np.on, paired=TRUE) -> on_diag_np; write(c("proportion positive on diagonal", on_diag_np$statistic, signif(on_diag_np$p.value,3)), filestats, ncol=3, append=T)
 t.test(end.off,end_pert.off,paired=TRUE) -> off_diagonal; write(c("mean weight off diagonal", off_diagonal$statistic, signif(off_diagonal$p.value,3)), filestats, ncol=3, append=T)
 t.test(PL.cont,PLA.pert,paired=TRUE) -> path_length; write(c("path length", path_length$statistic, signif(path_length$p.value,3)), filestats, ncol=3, append=T)
+
+pl.difference <- function(temp_dir){
+  setwd(treatment_dir[1]) 
+  mydat = read.table("data_summary.txt", header=T)
+  gens <- unique(mydat$Generation)
+  pl <- aggregate(.~Generation, data=mydat, FUN=mean)$path_length
+  setwd(treatment_dir[2]) 
+  mydat2 = read.table("data_summary.txt", header=T)
+  pl2 <- aggregate(.~Generation, data=mydat, FUN=mean)$path_length_ancestral
+  pl.diff <- pl - pl2
+  gen <- which.max(abs(pl.diff))
+}
+
+t.test.write <- function(pop1, pop2, comparison, filename, ncol){
+  wt <- t.test(pop1,pop2, paired=T)
+  write(c("paired t-test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
+}
 
 #-----------
 # Figure 4
@@ -405,5 +425,6 @@ treatment_dir <- NULL; treatment_dir[1] <- paste(main_dir,"/control_pop",sep="")
 data_summary(treatment_dir)
 robustness.boxplots(treament_dir, main_dir, stats=TRUE)
 robustness.scatterplot(treatment_dir, main_dir)
-  
+
+proximate_mechanisms(treatment_dir, main_dir)
 
