@@ -9,12 +9,9 @@ dat <- read.table("10000_random_individuals.txt", header=T)
 dat$g_rob <- round(dat$genetic_robustness,1)
 dat$e_rob <- round(dat$environmental_robustness,1)
 
-#dat.tab <- as.matrix(table(dat$g_rob, dat$e_rob))
 dat.tab2 <- as.matrix(table(dat$e_rob, dat$g_rob))
-
 colors = c("white","grey90","grey80","grey70","grey60","grey50","grey40","grey30","grey20","grey10","black","black")
 
-#filled.contour(dat.tab, col=colors, nlevels=8)
 pdf("Contour_Plot.pdf", width=7, height=7)
 par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
 filled.contour(dat.tab2, col=colors, nlevels=9, xlab="environmental robustness",
@@ -23,23 +20,16 @@ dev.off()
 
 out1 <- cor.test(dat$environmental_robustness, dat$genetic_robustness, method="spearman")
 out1
-#library(pspearman)
-#out2 <- spearman.test(dat$environmental_robustness, dat$genetic_robustness)
-#out2
+
 
 #-----------
 # Figure 2
 #-----------
 
 # Environmental and genetic robustness before and after evolution (in a control and perturbed environment)
-setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
-#setwd("~/UNC/Burch lab/Gene Network/gene-network/evolve_mutation_rate/robustness_data/Manuscript data/Figure 2")
-main_dir = getwd()
-treatment_dir <- NULL #asex and sex
-treatment_dir[1] <- paste(main_dir,"/control_pop",sep="")
-treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
 
-for(i in 1:length(treatment_dir)){
+data_summary <- function(treatment_dir){
+  for(i in 1:length(treatment_dir)){
   setwd(treatment_dir[i])
   
   #read in directory names for each experiment
@@ -49,7 +39,7 @@ for(i in 1:length(treatment_dir)){
     stop("No experiment directories found! Exiting.")
   }
   
-  #create data_summary file (will be stored in asex/sex folder)
+  #create data_summary file (will be stored in treatment folders)
   fileName = "data_summary.txt"
   fileHeader = c("Replicate", "Generation", "Mean_Fitness", "Mean_Robustness", "Median_Robustness", "Mean_Env_Robustness", "Median_Env_Robustness",
                  "path_length", "path_length_ancestral", "mean_weight_diagonal", "mean_weight_diagonal_nonzero", "prop_positive_on_diagonal", 
@@ -107,7 +97,15 @@ for(i in 1:length(treatment_dir)){
     }
   }
 }
+}
 
+setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
+main_dir = getwd()
+treatment_dir <- NULL #asex and sex
+treatment_dir[1] <- paste(main_dir,"/control_pop",sep="")
+treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
+
+data_summary(treatment_dir)
 
 setwd(main_dir)
 pdf("Robustness_Boxplots.pdf", width=10, height=7)
