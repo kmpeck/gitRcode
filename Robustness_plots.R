@@ -1,5 +1,6 @@
 #-----------
-# Figure 1
+# Figure 1: 
+# Contour plot of environmental vs. genetic robustness for random individuals
 #-----------
 
 setwd("~/GitHub/gene_network/data/Manuscript data/Figure 1")
