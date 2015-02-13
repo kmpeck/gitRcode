@@ -22,7 +22,7 @@ contour.plot <- function(filename, wd=getwd()){
 }
 
 
-data_summary <- function(treatment_dir){
+data.summary <- function(treatment_dir){
   for(i in 1:length(treatment_dir)){
   setwd(treatment_dir[i])
   
@@ -284,13 +284,13 @@ proximate.mechanism.stats <- function(treatment_dir, wd=getwd()){
   setwd(treatment_dir[1]) 
   mydat = read.table("data_summary.txt", header=T)
   mydat$mean_weight_offdiagonal <- mydat$mean_weight_all - mydat$mean_weight_diagonal
+  pl.gen <- pl.difference(treatment_dir)
   
-  gen <- which(mydat)
   end.on <- mydat$mean_weight_diagonal[mydat$Generation==max(mydat$Generation)]
   end.nz.on <- mydat$mean_weight_diagonal_nonzero[mydat$Generation==max(mydat$Generation)]
   end.np.on <- mydat$prop_positive_on_diagonal[mydat$Generation==max(mydat$Generation)]
   end.off <- mydat$mean_weight_offdiagonal[mydat$Generation==max(mydat$Generation)]
-  PL.cont <- mydat$path_length[mydat$Generation==unique(mydat$Generation)[6]]
+  PL.cont <- mydat$path_length[mydat$Generation==unique(mydat$Generation)[pl.gen]]
   setwd(treatment_dir[2]) 
   mydat = read.table("data_summary.txt", header=T)
   mydat$mean_weight_offdiagonal <- mydat$mean_weight_all - mydat$mean_weight_diagonal
@@ -298,26 +298,28 @@ proximate.mechanism.stats <- function(treatment_dir, wd=getwd()){
   end_pert.nz.on <- mydat$mean_weight_diagonal_nonzero[mydat$Generation==max(mydat$Generation)]
   end_pert.np.on <- mydat$prop_positive_on_diagonal[mydat$Generation==max(mydat$Generation)]
   end_pert.off <- mydat$mean_weight_offdiagonal[mydat$Generation==max(mydat$Generation)]
-  PLA.pert <-  mydat$path_length_ancestral[mydat$Generation==unique(mydat$Generation)[6]]
+  PLA.pert <-  mydat$path_length_ancestral[mydat$Generation==unique(mydat$Generation)[pl.gen]]
 
-setwd(main_dir)
-write("Weight on/off diagonal endpoint t-tests", filestats, append=T)
-t.test(end.on, end_pert.on, paired=TRUE) -> on_diagonal; write(c("mean weight diagonal", on_diagonal$statistic, signif(on_diagonal$p.value,3)), filestats, ncol=3, append=T)
-t.test(end.nz.on, end_pert.nz.on, paired=TRUE) -> on_diag_nz; write(c("mean weight diagonal nonzero", on_diag_nz$statistic, signif(on_diag_nz$p.value,3)), filestats, ncol=3, append=T)
-t.test(end.np.on, end_pert.np.on, paired=TRUE) -> on_diag_np; write(c("proportion positive on diagonal", on_diag_np$statistic, signif(on_diag_np$p.value,3)), filestats, ncol=3, append=T)
-t.test(end.off,end_pert.off,paired=TRUE) -> off_diagonal; write(c("mean weight off diagonal", off_diagonal$statistic, signif(off_diagonal$p.value,3)), filestats, ncol=3, append=T)
-t.test(PL.cont,PLA.pert,paired=TRUE) -> path_length; write(c("path length", path_length$statistic, signif(path_length$p.value,3)), filestats, ncol=3, append=T)
+  setwd(wd)
+  filestats="Proximate_mech_stats.txt"
+  fileHeader = c("Statistical_text", "Comparison", "stat_value", "p_value")
+  nCol = length(fileHeader)
+  write(fileHeader, filestats, ncolumns=nCol)
+  t.test.write(end.nz.on, end_pert.nz.on, "Endpoint populations of autoregulation", filestats, nCol)
+  t.test.write(end.off,end_pert.off, "Endpoint populations of off-diagonal", filestats, nCol)
+  t.test.write(PL.cont,PLA.pert, "Path length at largest difference", filestats, nCol)
+}
 
-pl.difference <- function(temp_dir){
+pl.difference <- function(treatment_dir){
   setwd(treatment_dir[1]) 
   mydat = read.table("data_summary.txt", header=T)
-  gens <- unique(mydat$Generation)
+  gens <- unique(mydat$Generation)[order(unique(mydat$Generation))]
   pl <- aggregate(.~Generation, data=mydat, FUN=mean)$path_length
   setwd(treatment_dir[2]) 
   mydat2 = read.table("data_summary.txt", header=T)
   pl2 <- aggregate(.~Generation, data=mydat, FUN=mean)$path_length_ancestral
   pl.diff <- pl - pl2
-  gen <- which.max(abs(pl.diff))
+  return(which.max(abs(pl.diff)))
 }
 
 t.test.write <- function(pop1, pop2, comparison, filename, ncol){
@@ -325,31 +327,30 @@ t.test.write <- function(pop1, pop2, comparison, filename, ncol){
   write(c("paired t-test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
 }
 
-#-----------
-# Figure 4
-#-----------
+genetic.variation <- function(treatment_dir, wd=getwd()){
+  setwd(wd)
+  pdf("Genetic_Variation_Boxplots.pdf", width=5, height=7)
+  par(mfrow=c(1,1))
+  par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
 
-setwd(main_dir)
+  setwd(treatment_dir[1])
+  mydat <- read.table("data_summary.txt", header=T)
+  control_end <- subset(mydat$genetic_variation_euclidian, mydat$Generation == max(mydat$Generation))
+  setwd(treatment_dir[2])
+  mydat2 <- read.table("data_summary.txt", header=T)
+  perturb_end <- subset(mydat2$genetic_variation_euclidian, mydat2$Generation == max(mydat2$Generation))
+  setwd(main_dir)
 
-pdf("Genetic_Variation_Boxplots.pdf", width=5, height=7)
-par(mfrow=c(1,1))
-par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
+  boxplot(control_end, perturb_end, names=c("control", "experimental"), ylim=c(0,.07), col="grey70", ylab="Pairwise genetic distance", xlab="Environments")
+  dev.off()
 
-#get data needed to set up empty plot
-setwd(treatment_dir[1])
-mydat <- read.table("data_summary.txt", header=T)
-control_end <- subset(mydat$genetic_variation_euclidian, mydat$Generation == max(mydat$Generation))
-setwd(treatment_dir[2])
-mydat2 <- read.table("data_summary.txt", header=T)
-perturb_end <- subset(mydat2$genetic_variation_euclidian, mydat2$Generation == max(mydat2$Generation))
-setwd(main_dir)
-
-boxplot(control_end, perturb_end, names=c("control", "experimental"), ylim=c(0,.07), col="grey70", ylab="Pairwise genetic distance", xlab="Environments")
-dev.off()
-
-write("Genetic variation endpoint population wilcoxon rank test", filestats, append=T)
-wilcox.test(control_end, perturb_end, paired=T) -> gen_var; write(c(gen_var$data.name, gen_var$statistic, signif(gen_var$p.value,3)), filestats, ncol=3, append=T) 
-
+  setwd(wd)
+  filestats="Genetic_variation_stats.txt"
+  fileHeader = c("Statistical_text", "Comparison", "stat_value", "p_value")
+  nCol = length(fileHeader)
+  write(fileHeader, filestats, ncolumns=nCol)
+  wilcox.test.write(control_end, perturb_end, "Endpoing genetic variation (control vs. pert)", filestats, nCol)
+}
 
 
 ##### Random Individuals Plots
@@ -422,9 +423,10 @@ setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
 main_dir = getwd()
 treatment_dir <- NULL; treatment_dir[1] <- paste(main_dir,"/control_pop",sep=""); treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
 
-data_summary(treatment_dir)
+data.summary(treatment_dir)
 robustness.boxplots(treament_dir, main_dir, stats=TRUE)
 robustness.scatterplot(treatment_dir, main_dir)
 
-proximate_mechanisms(treatment_dir, main_dir)
+proximate.mechanisms(treatment_dir, main_dir)
+proximate.mechanisms.stats(treatment_dir, main_dir)
 
