@@ -364,11 +364,11 @@ genetic.variation <- function(treatment_dir, wd=getwd()){
 }
 
 #genetic robustness linear model
-model.g <- function(param){
+model.g <- function(param, mydata){
   g.lm <- lm(asin(genetic_robustness)~param, data=mydata); return(g.lm)}
 
 #environmental robustness linear model
-model.e <- function(param){
+model.e <- function(param, mydata){
   e.lm <- lm(asin(environmental_robustness)~param, data=mydata); return(e.lm)}
 
 #calculate y values for correlation plot
@@ -387,12 +387,13 @@ x.vals <- function(mu, sd){
 #Plot correlation of proximate mechanisms with gentic and environmental robustness
 correlation.plots <- function(filename, wd=getwd()){
 
+  setwd(wd)
   mydata = read.table(filename, header=T)
   mydata$mean_weight_offdiagonal <- mydata$mean_weight_all - mydata$mean_weight_diagonal
 
-  g.lm <- model.g(mydata$mean_weight_diagonal); e.lm <- model.e(mydata$mean_weight_diagonal); mean1 <- mean(mydata$mean_weight_diagonal); sd1 <- sd(mydata$mean_weight_diagonal)
-  g.lm2 <- model.g(mydata$path_length); e.lm2 <- model.e(mydata$path_length); mean2 <- mean(mydata$path_length); sd2 <- sd(mydata$path_length)
-  g.lm3 <- model.g(mydata$mean_weight_offdiagonal); e.lm3 <- model.e(mydata$mean_weight_offdiagonal); mean3 <- mean(mydata$mean_weight_offdiagonal); sd3 <- sd(mydata$mean_weight_offdiagonal)
+  g.lm <- model.g(mydata$mean_weight_diagonal, mydata); e.lm <- model.e(mydata$mean_weight_diagonal, mydata); mean1 <- mean(mydata$mean_weight_diagonal); sd1 <- sd(mydata$mean_weight_diagonal)
+  g.lm2 <- model.g(mydata$path_length, mydata); e.lm2 <- model.e(mydata$path_length, mydata); mean2 <- mean(mydata$path_length); sd2 <- sd(mydata$path_length)
+  g.lm3 <- model.g(mydata$mean_weight_offdiagonal, mydata); e.lm3 <- model.e(mydata$mean_weight_offdiagonal, mydata); mean3 <- mean(mydata$mean_weight_offdiagonal); sd3 <- sd(mydata$mean_weight_offdiagonal)
 
   z <- seq(-3,3,.1)
 
@@ -402,12 +403,12 @@ correlation.plots <- function(filename, wd=getwd()){
 
   pdf("Correlation_plots.pdf", width=10, height=6)
   par(mfrow=c(1,2))
-  plot(NA, ylim=c(0.2,1), xlim=c(-3,3), xlab="Z-value", ylab="Genetic robustness")
+  plot(NA, ylim=c(0,1), xlim=c(-3,3), xlab="Z-value", ylab="Genetic robustness")
   lines(sin(yg)~z, col=2, lwd=2)
   lines(sin(yg2)~z, col=4, lwd=3)
   lines(sin(yg3)~z, col=3, lwd=2)
   legend("bottomright", c("Strength of autoregulation", "Off-diagonal interactions", "Path length"), lty=1, col=c(2,3,4), lwd=2, bty='n')
-  plot(NA, ylim=c(0.2,1), xlim=c(-3,3), xlab="Z-value", ylab="Environmental robustness")
+  plot(NA, ylim=c(0,1), xlim=c(-3,3), xlab="Z-value", ylab="Environmental robustness")
   lines(sin(ye)~z, col=2, lwd=2)
   lines(sin(ye2)~z, col=4, lwd=2)
   lines(sin(ye3)~z, col=3, lwd=2)
@@ -439,6 +440,6 @@ proximate.mechanisms.stats(treatment_dir, main_dir)
 genetic.variation(treatment_dir, main_dir)
 
 #Correlation plots
-setwd("~/GitHub/gene_network/data/Manuscript data/Figure 3/boolean_1500")
+setwd("~/GitHub/gene_network/data/Manuscript data/Figure 3/boolean")
 correlation.plots("1500_random_individuals.txt")
 
