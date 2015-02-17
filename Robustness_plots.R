@@ -363,6 +363,12 @@ model.y <- function(model,x){
   return(yg)
 }
 
+x.vals <- function(mu, sd){
+  z <- seq(-3,3,.1)
+  x <- z*sd + mu
+  return(x)
+}
+
 correlation.plots <- function(filename, wd=getwd()){
 
   mydata = read.table(filename, header=T)
@@ -370,42 +376,28 @@ correlation.plots <- function(filename, wd=getwd()){
 
   g.lm <- model.g(mydata$mean_weight_diagonal); e.lm <- model.e(mydata$mean_weight_diagonal); mean1 <- mean(mydata$mean_weight_diagonal); sd1 <- sd(mydata$mean_weight_diagonal)
   g.lm2 <- model.g(mydata$path_length); e.lm2 <- model.e(mydata$path_length); mean2 <- mean(mydata$path_length); sd2 <- sd(mydata$path_length)
-  g.lm3 <- model.g(mydata$mean_weight_offdiagonal); e.lm7 <- model.e(mydata$mean_weight_offdiagonal); mean7 <- mean(mydata$mean_weight_offdiagonal); sd7 <- sd(mydata$mean_weight_offdiagonal)
+  g.lm3 <- model.g(mydata$mean_weight_offdiagonal); e.lm3 <- model.e(mydata$mean_weight_offdiagonal); mean3 <- mean(mydata$mean_weight_offdiagonal); sd3 <- sd(mydata$mean_weight_offdiagonal)
 
   z <- seq(-3,3,.1)
 
-x.vals <- function(mu, sd){
-  z <- seq(-3,3,.1)
-  x <- z*sd + mu
-  return(x)
+  yg <- model.y(g.lm,x.vals(mean1,sd1)); ye <- model.y(e.lm,x.vals(mean1,sd1))
+  yg2 <- model.y(g.lm2,x.vals(mean2,sd2)); ye2 <- model.y(e.lm2,x.vals(mean2,sd2))
+  yg3 <- model.y(g.lm3,x.vals(mean3,sd3)); ye3 <- model.y(e.lm3,x.vals(mean3,sd3))
+
+  pdf("Correlation_plots.pdf", width=10, height=6)
+  par(mfrow=c(1,2))
+  plot(NA, ylim=c(0.2,1), xlim=c(-3,3), xlab="Z-value", ylab="Genetic robustness")
+  lines(sin(yg)~z, col=2, lwd=2)
+  lines(sin(yg2)~z, col=4, lwd=3)
+  lines(sin(yg3)~z, col=3, lwd=2)
+  legend("bottomright", c("Strength of autoregulation", "Off-diagonal interactions", "Path length"), lty=1, col=c(2,3,4), lwd=2, bty='n')
+  plot(NA, ylim=c(0.2,1), xlim=c(-3,3), xlab="Z-value", ylab="Environmental robustness")
+  lines(sin(ye)~z, col=2, lwd=2)
+  lines(sin(ye2)~z, col=4, lwd=2)
+  lines(sin(ye3)~z, col=3, lwd=2)
+  legend("bottomright", c("Strength of autoregulation", "Off-diagonal interactions", "Path length"), lty=1, col=c(2,3,4), lwd=2, bty='n')
+  dev.off()
 }
-
-#x <- seq(-1,1,.01)
-yg <- model.y(g.lm,x.vals(mean1,sd1)); ye <- model.y(e.lm,x.vals(mean1,sd1))
-yg2 <- model.y(g.lm2,x.vals(mean2,sd2)); ye2 <- model.y(e.lm2,x.vals(mean2,sd2))
-#yg3 <- model.y(g.lm3,x.vals(mean3,sd3)); ye3 <- model.y(e.lm3,x.vals(mean3,sd3))
-#yg4 <- model.y(g.lm4,x.vals(mean4,sd4)); ye4 <- model.y(e.lm4,x.vals(mean4,sd4))
-#yg5 <- model.y(g.lm5,x.vals(mean5,sd5)); ye5 <- model.y(e.lm5,x.vals(mean5,sd5))
-#yg6 <- model.y(g.lm6,x.vals(mean6,sd6)); ye6 <- model.y(e.lm6,x.vals(mean6,sd6))
-yg3 <- model.y(g.lm3,x.vals(mean3,sd3)); ye3 <- model.y(e.lm3,x.vals(mean3,sd3))
-
-pdf("Correlation_plots.pdf", width=10, height=6)
-par(mfrow=c(1,2))
-plot(NA, ylim=c(0.2,1), xlim=c(-3,3), xlab="Z-value", ylab="Genetic robustness")
-lines(sin(yg)~z, col=2, lwd=2)
-lines(sin(yg2)~z, col=4, lwd=3)
-#lines(sin(yg4)~z, col=5, lwd=2)
-lines(sin(yg3)~z, col=3, lwd=2)
-#lines(sin(yg6)~z, col=6, lwd=2)
-legend("bottomright", c("Strength of autoregulation", "Off-diagonal interactions", "Path length"), lty=1, col=c(2,3,4), lwd=2, bty='n')
-plot(NA, ylim=c(0.2,1), xlim=c(-3,3), xlab="Z-value", ylab="Environmental robustness")
-lines(sin(ye)~z, col=2, lwd=2)
-lines(sin(ye2)~z, col=4, lwd=2)
-#lines(sin(ye4)~z, col=5, lwd=2)
-lines(sin(ye7)~z, col=3, lwd=2)
-#lines(sin(ye6)~z, col=6, lwd=2)
-legend("bottomright", c("Strength of autoregulation", "Off-diagonal interactions", "Path length"), lty=1, col=c(2,3,4), lwd=2, bty='n')
-dev.off()
 
 
 ##PLOT FIGURES
