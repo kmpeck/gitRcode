@@ -5,6 +5,7 @@
 library("gplots")
 library("MASS")
 
+#Contour plot of genetic robustness against environmental robustness - random individuals
 contour.plot <- function(filename, wd=getwd()){
   dat <- read.table(filename, header=T)
   dat$g_rob <- round(dat$genetic_robustness,1)
@@ -21,6 +22,7 @@ contour.plot <- function(filename, wd=getwd()){
   out1
 }
 
+#Read in population data and create a data_summary file for each treatment
 data.summary <- function(treatment_dir){
   for(i in 1:length(treatment_dir)){
   setwd(treatment_dir[i])
@@ -92,6 +94,7 @@ data.summary <- function(treatment_dir){
 }
 }
 
+#Boxplots of genetic and environmental robustness (start, end control, end perturbed)
 robustness.boxplots <- function(treatment_dir, wd=getwd(), stats=FALSE){
   setwd(wd)
   pdf("Robustness_Boxplots.pdf", width=10, height=7)
@@ -129,11 +132,13 @@ robustness.boxplots <- function(treatment_dir, wd=getwd(), stats=FALSE){
     }
 }
 
+#Wilcox sign rank test for comparing 2 populations - writes to a file
 wilcox.test.write <- function(pop1, pop2, comparison, filename, ncol){
   wt <- wilcox.test(pop1,pop2, paired=T)
   write(c("Wilcox sign-rank test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
 }
 
+#Scatterplot of genetic robustness against environmental robustness - evolution exp (start, end control, end perturbed)
 robustness.scatterplot <- function(treatment_dir, wd=setwd(), lines=TRUE, legend="topleft"){
   pdf("Robustness_scatterplot.pdf", width=8, height=7)
   par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
@@ -169,11 +174,12 @@ robustness.scatterplot <- function(treatment_dir, wd=setwd(), lines=TRUE, legend
   dev.off()
 }
 
-#function to plot error bars
+#Plot error bars
 error.bars <- function(x, y, err, barwidth, col){ 
   segments(x,y-err,x,y+err, col=col); segments(x-barwidth,y+err,x+barwidth,y+err, col=col); segments(x-barwidth,y-err,x+barwidth,y-err, col=col)
 }
 
+#Generate an empty starting plot
 starting.plot <- function(y, ylab, gens, y.adj=0, log=FALSE){
   if(log){
     xlim=c(0, log10(gens))
@@ -191,6 +197,7 @@ starting.plot <- function(y, ylab, gens, y.adj=0, log=FALSE){
   }
 }
 
+#Plot points on an empty plot from a population parameter (e.g. fitness)
 plot.points <- function(param, eb=TRUE, legend="bottomright", log=FALSE){
   treatments <- c("control", "perturbed")
   colors <- c(1,"dodgerblue")
@@ -212,6 +219,7 @@ plot.points <- function(param, eb=TRUE, legend="bottomright", log=FALSE){
   legend(legend,treatments,col=colors,pch=16, bty='n')
 }
 
+#Plot points of ancestral robustness comparison
 plot.points.anc <- function(param, param2, eb=TRUE, legend="bottomright", log=FALSE){
   treatments <- c("control", "perturbed (perturbed env.)", "perturbed (ancestral env.)")
   colors <- c(1,"dodgerblue", "grey70")
@@ -240,6 +248,7 @@ plot.points.anc <- function(param, param2, eb=TRUE, legend="bottomright", log=FA
   legend(legend,treatments,col=colors,pch=16, bty='n')
 }
 
+#Generate plot of all interested proximate mechanisms
 proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE, auto=c(0,.5), off=c(-.5,0)){
   setwd(treatment_dir[2]) 
   temp.dat <- read.table("data_summary.txt", header=T)
@@ -277,6 +286,7 @@ proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE, auto=c(0,.
   dev.off()
 }
 
+#Perform stats on proximate mechanism data
 proximate.mechanisms.stats <- function(treatment_dir, wd=getwd()){
   #t-test on mean weight diagonal endpoints
   setwd(treatment_dir[1]) 
@@ -308,6 +318,7 @@ proximate.mechanisms.stats <- function(treatment_dir, wd=getwd()){
   t.test.write(PL.cont,PLA.pert, "Path length at largest difference", filestats, nCol)
 }
 
+#Calculate the generation at which path length has the largest difference between control and perturbed ancestral
 pl.difference <- function(treatment_dir){
   setwd(treatment_dir[1]) 
   mydat = read.table("data_summary.txt", header=T)
@@ -320,11 +331,13 @@ pl.difference <- function(treatment_dir){
   return(which.max(abs(pl.diff)))
 }
 
+#t-test of 2 populations, writes to file
 t.test.write <- function(pop1, pop2, comparison, filename, ncol){
   wt <- t.test(pop1,pop2, paired=T)
   write(c("paired t-test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
 }
 
+#Boxplot of genetic variation (euclidean) for control and perturbed environments
 genetic.variation <- function(treatment_dir, wd=getwd()){
   setwd(wd)
   pdf("Genetic_Variation_Boxplots.pdf", width=5, height=7)
@@ -350,23 +363,28 @@ genetic.variation <- function(treatment_dir, wd=getwd()){
   wilcox.test.write(control_end, perturb_end, "Endpoing genetic variation (control vs. pert)", filestats, nCol)
 }
 
+#genetic robustness linear model
 model.g <- function(param){
   g.lm <- lm(asin(genetic_robustness)~param, data=mydata); return(g.lm)}
 
+#environmental robustness linear model
 model.e <- function(param){
   e.lm <- lm(asin(environmental_robustness)~param, data=mydata); return(e.lm)}
 
+#calculate y values for correlation plot
 model.y <- function(model,x){
   yg <- x*coef(model)[[2]] + coef(model)[[1]]
   return(yg)
 }
 
+#calculate x values for correlation plot (z score)
 x.vals <- function(mu, sd){
   z <- seq(-3,3,.1)
   x <- z*sd + mu
   return(x)
 }
 
+#Plot correlation of proximate mechanisms with gentic and environmental robustness
 correlation.plots <- function(filename, wd=getwd()){
 
   mydata = read.table(filename, header=T)
@@ -413,11 +431,14 @@ data.summary(treatment_dir)
 robustness.boxplots(treatment_dir, main_dir, stats=TRUE)
 robustness.scatterplot(treatment_dir, main_dir)
 
+#Proximate mechanisms
 proximate.mechanisms(treatment_dir, main_dir)
 proximate.mechanisms.stats(treatment_dir, main_dir)
 
+#Genetic variation boxplots
 genetic.variation(treatment_dir, main_dir)
 
+#Correlation plots
 setwd("~/GitHub/gene_network/data/Manuscript data/Figure 3/boolean_1500")
 correlation.plots("1500_random_individuals.txt")
 
