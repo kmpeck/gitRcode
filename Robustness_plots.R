@@ -12,7 +12,7 @@ contour.plot <- function(filename, wd=getwd()){
   dat.tab2 <- as.matrix(table(dat$e_rob, dat$g_rob))
   colors = c("white","grey90","grey80","grey70","grey60","grey50","grey40","grey30","grey20","grey10","black","black")
   setwd(wd)
-  pdf("Contour_Plot.pdf", width=7, height=7)
+  pdf("Contour_Plot.pdf", width=8, height=7)
   par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
   filled.contour(dat.tab2, col=colors, nlevels=9, xlab="environmental robustness",
                ylab="genetic robustness")
@@ -20,7 +20,6 @@ contour.plot <- function(filename, wd=getwd()){
   out1 <- cor.test(dat$environmental_robustness, dat$genetic_robustness, method="spearman")
   out1
 }
-
 
 data.summary <- function(treatment_dir){
   for(i in 1:length(treatment_dir)){
@@ -110,15 +109,14 @@ robustness.boxplots <- function(treatment_dir, wd=getwd(), stats=FALSE){
   mydat2 <- read.table("data_summary.txt", header=T)
   env_end_pert <- subset(mydat2$Median_Env_Robustness, mydat2$Generation == max(mydat2$Generation))
   gen_end_pert <- subset(mydat2$genetic_robustness_ancestral, mydat2$Generation == max(mydat2$Generation))
-  setwd(main_dir)
+  setwd(wd)
 
   boxplot(env_start, env_end, env_end_pert, names=c("start", "end - control", "end"), main="Environmental Robustness", ylim=c(0,1), col="grey70")
   boxplot(gen_start, gen_end, gen_end_pert, names=c("start", "end - control", "end"), main="Genetic Robustness", ylim=c(0,1), col="grey70")
   dev.off()
 
   if(stats){
-    #Wilcoxon sign-rank test
-    #Does not assume a normal distribution
+    #Wilcoxon sign-rank test (Does not assume a normal distribution)
     setwd(wd)
     filestats="Population_stats.txt"
     fileHeader = c("Statistical_text", "Comparison", "stat_value", "p_value")
@@ -136,7 +134,7 @@ wilcox.test.write <- function(pop1, pop2, comparison, filename, ncol){
   write(c("Wilcox sign-rank test", comparison, wt$statistic, signif(wt$p.value,3)), filename, ncol=ncol, append=T)
 }
 
-robustness.scatterplot <- function(treatment_dir, wd=setwd(), lines=TRUE, legend="topleft")
+robustness.scatterplot <- function(treatment_dir, wd=setwd(), lines=TRUE, legend="topleft"){
   pdf("Robustness_scatterplot.pdf", width=8, height=7)
   par(mar=c(4,4,2.4,2.4), mgp=c(2.4, 0.8, 0), cex.lab=1.27, cex.axis=1.12)
 
@@ -186,7 +184,7 @@ starting.plot <- function(y, ylab, gens, y.adj=0, log=FALSE){
   plot(NA,xlab="Generation",ylab=ylab, ylim=c(min(y)-y.adj, 
                                               max(y)+y.adj), xlim=xlim, xaxt="n")
   if(log){
-    axis(1, at=c(log10(1), log10(10), log10(100), log10(200), log10(500)), labels=c(1,10,100,200,500))
+    axis(1, at=c(log10(1), log10(10), log10(100), log10(500)), labels=c(1,10,100,500))
   }
   else{
     axis(1)
@@ -242,7 +240,7 @@ plot.points.anc <- function(param, param2, eb=TRUE, legend="bottomright", log=FA
   legend(legend,treatments,col=colors,pch=16, bty='n')
 }
 
-proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE){
+proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE, auto=c(0,.5), off=c(-.5,0)){
   setwd(treatment_dir[2]) 
   temp.dat <- read.table("data_summary.txt", header=T)
   temp.dat$mean_weight_offdiagonal <- temp.dat$mean_weight_all - temp.dat$mean_weight_diagonal
@@ -258,7 +256,7 @@ proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE){
 
   #Genetic Robustness
   starting.plot(c(0.3,1), "Median Genetic Robustness", gens, log=log)
-  plot.points.anc("Median_Robustness", "genetic_robustness_ancestral", legend="bottomright", log=log)
+  plot.points.anc("Median_Robustness", "genetic_robustness_ancestral", legend="topleft", log=log)
 
   #Environmental Robustness
   starting.plot(c(0.3,1), "Median Environmental Robustness", gens, log=log)
@@ -269,17 +267,17 @@ proximate.mechanisms <- function(treatment_dir, wd=getwd(), log=TRUE){
   plot.points.anc("path_length","path_length_ancestral", legend="topright", log=log)
 
   #Strength of autoregulation
-  starting.plot(temp.dat$mean_weight_diagonal_nonzero, "Strength of Autoregulation", gens, y.adj=0.2, log=log)
-  plot.points("mean_weight_diagonal_nonzero", legend="topright",log=log)
+  starting.plot(auto, "Strength of Autoregulation", gens, y.adj=0, log=log)
+  plot.points("mean_weight_diagonal_nonzero", legend="bottomright",log=log)
 
   #Mean weight of the off-diagonals
-  starting.plot(temp.dat$mean_weight_offdiagonal, "Mean Weight of Off-Diagonal Interactions", gens, y.adj=0.2, log=log)
-  plot.points("mean_weight_offdiagonal", legend="topright", log=log)
+  starting.plot(off, "Mean Weight of Off-Diagonal Interactions", gens, y.adj=0, log=log)
+  plot.points("mean_weight_offdiagonal", legend="bottomright", log=log)
 
   dev.off()
 }
 
-proximate.mechanism.stats <- function(treatment_dir, wd=getwd()){
+proximate.mechanisms.stats <- function(treatment_dir, wd=getwd()){
   #t-test on mean weight diagonal endpoints
   setwd(treatment_dir[1]) 
   mydat = read.table("data_summary.txt", header=T)
@@ -403,16 +401,16 @@ correlation.plots <- function(filename, wd=getwd()){
 ##PLOT FIGURES
 
 #Contour plot
-setwd("~/GitHub/gene_network/data/Manuscript data/Figure 1")
+setwd("~/GitHub/gene_network/data/Manuscript data/Figure 1/default")
 contour.plot("10000_random_individuals.txt")
 
 #Robustness boxplots
-setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/default6")
+setwd("~/GitHub/gene_network/data/Manuscript data/Figure 2 new/boolean - Copy")
 main_dir = getwd()
 treatment_dir <- NULL; treatment_dir[1] <- paste(main_dir,"/control_pop",sep=""); treatment_dir[2] <- paste(main_dir,"/perturb_pop",sep="")
 
 data.summary(treatment_dir)
-robustness.boxplots(treament_dir, main_dir, stats=TRUE)
+robustness.boxplots(treatment_dir, main_dir, stats=TRUE)
 robustness.scatterplot(treatment_dir, main_dir)
 
 proximate.mechanisms(treatment_dir, main_dir)
