@@ -40,7 +40,7 @@ head(cars)
 
 You can also embed plots, for example:
 
-```{r, echo=FALSE, fig.width=5, fig.height=5}
+```{r, echo=FALSE, fig.width=5, fig.height=5, fig.align='center'}
 plot(dist~speed, data=cars, col="dodgerblue", pch=16)
 ```
 
@@ -117,7 +117,7 @@ Check out more tutorials on [git](http://git-scm.com/docs/gittutorial) and [git 
 ```{r, message=FALSE, results='hide', warning=FALSE}
 install.packages("shiny", repos="http://cran.rstudio.com/")
 library(shiny)
-setwd("C:/Users/kayla/Dropbox/Kayla/Shiny")
+setwd("C:/Users/kaylap/Dropbox/Kayla/Shiny")
 ```
 
 Shiny has a few built-in examples to show you its capabilities. First, we'll look at a histogram that is interactive by allowing you to change the number of bins. Let's review the code to generate a histogram.
@@ -201,13 +201,7 @@ One thing to note is that the values that are being inputted by the user are goi
 virus_of_choice <- subset(dat, dat$virus==input$virus)
 ```
 
-The plot overall will highlight specific points on a plot given the user's virus of choice.
-
-```{r, eval=FALSE}
-runApp("virus_identify")
-```
-
-I've also created a more complex version of this example, where users can input which value they would like to be printed on the screen:
+The plot overall will highlight specific points on a plot given the user's virus of choice. Additionally, users can input which value they would like to be printed on the screen:
 
 ```{r, eval=FALSE}
 runApp("virus_identify2")
