@@ -97,6 +97,8 @@ Click **Diff** to view changes between your current version and the last "pushed
 
 Click **Commit** when you're ready to "stage" your changes. Here, you can select which files to add to the commit and include a message to be linked to that commit. Click **Push** when you are ready to send off all of your commits.
 
+Allen says this figure is too complicated:
+
 ![workflow](https://sselab.de/lab2/public/wiki/sselab/images/thumb/4/4f/Git_workflow.png/800px-Git_workflow.png)
 
 Selecting the **History** option lets you scroll through previous commits and identify where a mistake occurred. If it was in the *last* commit, you can use the **Revert** option. However, if it is further back, you can copy a past version into the present using its unique id (SHA).
