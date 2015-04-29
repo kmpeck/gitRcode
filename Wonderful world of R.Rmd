@@ -2,8 +2,7 @@
 title: "Wonderful world of R"
 author: "Kayla Peck"
 date: "April 29, 2015"
-output: 
-  pdf_document
+output: pdf_document
 ---
 
 #1. R Markdown
