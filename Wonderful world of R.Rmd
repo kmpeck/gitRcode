@@ -115,10 +115,17 @@ Check out more tutorials on [git](http://git-scm.com/docs/gittutorial) and [git 
 
 #3. Shiny
 
+Shiny is a package in R that allows you to create interactive plots that can be displayed as html. Shiny offers two unique components:
+
+* Contains commands for taking in user input from an html format
+* Updates plots automatically when user input changes
+
+The first step is to install the Shiny package.
+
 ```{r, message=FALSE, results='hide', warning=FALSE}
 install.packages("shiny", repos="http://cran.rstudio.com/")
 library(shiny)
-setwd("C:/Users/kaylap/Dropbox/Kayla/Shiny")
+##setwd("C:/Users/kaylap/Dropbox/Kayla/Shiny")
 ```
 
 Shiny has a few built-in examples to show you its capabilities. First, we'll look at a histogram that is interactive by allowing you to change the number of bins. Let's review the code to generate a histogram.
@@ -191,6 +198,7 @@ shinyServer(function(input,output)
 You can run your app using the command *runApp("directory.name")*, where directory.name indicates that name of the folder that contains both the ui.R and the server.R file.
 
 ```{r, eval=FALSE}
+##Note: you won't be able to run this since the code is stored locally on Kayla's computer
 runApp("plaque_assay")
 ```
 
@@ -205,12 +213,14 @@ virus_of_choice <- subset(dat, dat$virus==input$virus)
 The plot overall will highlight specific points on a plot given the user's virus of choice. Additionally, users can input which value they would like to be printed on the screen:
 
 ```{r, eval=FALSE}
+##Note: you won't be able to run these since the code is stored locally on Kayla's computer
 runApp("virus_identify2")
 ```
 
 The above examples are gratuitous plots, but here's a useful one that could actually be useful:
 
 ```{r, eval=FALSE}
+##Note: you won't be able to run these since the code is stored locally on Kayla's computer
 runApp("chikv_swelling")
 ```
 
@@ -251,14 +261,14 @@ Browse through the Shiny gallery for more complex/fancy examples.
 ###Using ShinyApps.io to host your plots:
 Go to: http://cran.r-project.org/bin/windows/Rtools/  
 Download RTools version 3.1  
-Run find_rtools() from R  
-Update devtools package using install_packages("devtools")  
+Run `find_rtools()` from R  
+Update devtools package using `install_packages("devtools")`  
 Restart R session  
-Run devtools::install_github('rstudio/shinyapps')  
-Run library(shinyapps)  
+Run `devtools::install_github('rstudio/shinyapps')` 
+Run `library(shinyapps)`  
 Go to shinyapps.io and create an account  
 Follow the instructions to authorize your computer through a "Token"  
-In R, run deployApp("directory.name") or use runApp("directory.name) and press the Deploy button at the top of the window. This links in with your shinyapps.io account and allows you to have a url associated with your code.  *Note: the latest R version supported for this is 3.1.1*
+In R, run `deployApp("directory.name")` or use `runApp("directory.name")` and press the Deploy button at the top of the window. This links in with your shinyapps.io account and allows you to have a url associated with your code.  *Note: the latest R version supported for this is 3.1.1*
 
 
 
