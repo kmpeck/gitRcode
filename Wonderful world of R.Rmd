@@ -83,13 +83,21 @@ In RStudio, go to:
         * Git/SVN panel
             *Select "git" under version control system
             
-You should now see a git pane in the top right corner of Rstudio
+You should now see a git pane in the top right corner of Rstudio. Here, you can view files that have been modified from the last "commit", untracked files, or deleted files.
 
+##Navigating the git pane
 
-```{r, message=FALSE, results='hide', warning=FALSE}
-install.packages("devtools", repos="http://cran.rstudio.com/")
-library("rmarkdown")
+Click **Diff** to view changes between your current version and the last "pushed" version.
+
+Click **Commit** when you're ready to "stage" your changes. Here, you can select which files to add to the commit and include a message to be linked to that commit. Click **Push** when you are ready to send off all of your commits.
+
+Selecting the **History** option lets you scroll through previous commits and identify where a mistake occurred. If it was in the *last* commit, you can use the **Revert** option. However, if it is further back, you can copy a past version into the present using its unique id (SHA).
+
+```{r, eval=FALSE}
+git checkout <SHA> <filename>
 ```
+
+Check out more tutorials on [git](http://git-scm.com/docs/gittutorial) and [git in RStudio](http://r-pkgs.had.co.nz/git.html).
 
 
 #3. Shiny
