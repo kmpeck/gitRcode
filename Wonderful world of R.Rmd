@@ -1,7 +1,7 @@
 ---
 title: "Wonderful world of R"
 author: "Kayla Peck"
-date: "Sunday, April 26, 2015"
+date: "April 29, 2015"
 output: 
   pdf_document
 ---
@@ -40,7 +40,7 @@ head(cars)
 
 You can also embed plots, for example:
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=5, fig.height=5}
 plot(dist~speed, data=cars, col="dodgerblue", pch=16)
 ```
 
@@ -57,7 +57,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
 
-Excitingly, you can also embed code from other programming languages in your R Markdown document. For example:
+On an exciting (albeit random) note, you can also embed code from other programming languages in your R Markdown document. For example:
 
 ```{r engine='python'}
 food = 'potatoes'
@@ -98,6 +98,8 @@ Click **Diff** to view changes between your current version and the last "pushed
 
 Click **Commit** when you're ready to "stage" your changes. Here, you can select which files to add to the commit and include a message to be linked to that commit. Click **Push** when you are ready to send off all of your commits.
 
+![workflow](https://sselab.de/lab2/public/wiki/sselab/images/thumb/4/4f/Git_workflow.png/800px-Git_workflow.png)
+
 Selecting the **History** option lets you scroll through previous commits and identify where a mistake occurred. If it was in the *last* commit, you can use the **Revert** option. However, if it is further back, you can copy a past version into the present using its unique id (SHA).
 
 ```{r, eval=FALSE}
@@ -107,11 +109,15 @@ git checkout <SHA> <filename>
 Check out more tutorials on [git](http://git-scm.com/docs/gittutorial) and [git in RStudio](http://r-pkgs.had.co.nz/git.html).
 
 
+
+
+
 #3. Shiny
 
 ```{r, message=FALSE, results='hide', warning=FALSE}
 install.packages("shiny", repos="http://cran.rstudio.com/")
 library(shiny)
+setwd("C:/Users/kayla/Dropbox/Kayla/Shiny")
 ```
 
 Shiny has a few built-in examples to show you its capabilities. First, we'll look at a histogram that is interactive by allowing you to change the number of bins. Let's review the code to generate a histogram.
@@ -123,26 +129,13 @@ hist(x, breaks=bins, col="darkgray", border="white",
      main="old faithful waiting time to next eruption", xlab="Minutes")
 ```
 
-We can change the bins manually, by increasing or decreasing the number of breaks.
+We can change the bins manually, by increasing or decreasing the number of breaks but Shiny allows the user to change the number of bins in real-time. This uses the input from the user (number of bins), and the *renderPlot()* function to allow the plot to update automatically.
 
-```{r}
-par(mfrow=c(2,1))
-bins <- seq(min(x), max(x), length.out=10+1)
-hist(x, breaks=bins, col="darkgray", border="white", 
-     main="old faithful waiting time (10 bins)", xlab="Minutes")
-bins <- seq(min(x), max(x), length.out=30+1)
-hist(x, breaks=bins, col="darkgray", border="white", 
-     main="old faithful waiting time (30 bins)", xlab="Minutes")
-```
-
-Shiny allows the user to change the number of bins in real-time. This uses the input from the user (number of bins), and the *renderPlot()* function to allow the plot to update automatically.
-
-
-```
+```{r, eval=FALSE}
 runExample("01_hello")
 ```
 
-###Setting up Shiny R scripts
+##Setting up Shiny R scripts
 
 Shiny apps have 2 main components:
 1. User-interface script
@@ -152,7 +145,7 @@ The User-interface script (which must be saved as **ui.R**) controls the layout 
 
 Let's set up a basic user-interface script:
 
-```
+```{r, eval=FALSE}
 library(shiny)
 shinyUI(fluidPage(
   #Main title
@@ -173,7 +166,7 @@ shinyUI(fluidPage(
 
 Next, we'll set up the **server.R** script which has the code needed to actually build the app.
 
-```
+```{r, eval=FALSE}
 library(shiny)
 data <- read.csv("plaque_assay.csv")
 shinyServer(function(input,output)
@@ -196,38 +189,45 @@ shinyServer(function(input,output)
 
 You can run your app using the command *runApp("directory.name")*, where directory.name indicates that name of the folder that contains both the ui.R and the server.R file.
 
-```
-library(shiny)
+```{r, eval=FALSE}
 runApp("plaque_assay")
 ```
 
-###Translating user input into R output
+##Translating user input into R output
 
 One thing to note is that the values that are being inputted by the user are going to enter the R code as strings. Thus in the previous example, even though the user is choosing 1, 2, or 3, it's being read in R as "1", "2", "3". This was fixed above by using *as.numeric(input$replicate)*. However, if you are matching the value of a cell to a user-inputted argument, it does not have to be transformed. For example, in the next plot, we will use the user input to subset the data using:
 
-```
+```{r, eval=FALSE}
 virus_of_choice <- subset(dat, dat$virus==input$virus)
 ```
 
 The plot overall will highlight specific points on a plot given the user's virus of choice.
 
-```
+```{r, eval=FALSE}
 runApp("virus_identify")
 ```
 
 I've also created a more complex version of this example, where users can input which value they would like to be printed on the screen:
 
-```
+```{r, eval=FALSE}
 runApp("virus_identify2")
 ```
 
-###Sharing your Shiny app
+The above examples are gratuitous plots, but here's a useful one that could actually be useful:
+
+```{r, eval=FALSE}
+runApp("chikv_swelling")
+```
+
+Email me (kaylap@live.unc.edu) if interested in the code for the above Shiny apps!
+
+##Sharing your Shiny app
 
 Once you have completed a graph, you can share it with your colleagues in several ways. The easiest way is to send them the server.R and ui.R files. However, you can also host the code online so that it can be run from anyone using R without the files. For example, github can host the code.
 
 Putting my virus_identify code on github, anyone can run it by typing:
 
-```
+```{r, eval=FALSE}
 runGitHub("shiny", "kmpeck")
 ```
 
@@ -240,7 +240,7 @@ There are other cool things you can do with Shiny.
  
 Check out the examples below to see some of these options:
  
-```
+```{r, eval=FALSE}
 runExample("02_text")
 runExample("06_tabsets")
 runExample("09_upload")
